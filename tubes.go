@@ -8,153 +8,220 @@ type Mahasiswa struct {
 	Kelas string
 }
 
-var daftarMahasiswa []Mahasiswa
+var dataMahasiswa [100]Mahasiswa
 
 func main() {
-	for {
-		fmt.Println()
-		fmt.Println("=== SiPresensi ===")
-		fmt.Println("1. Tambah Mahasiswa")
-		fmt.Println("2. Tampilkan Mahasiswa")
-		fmt.Println("3. Ubah Mahasiswa")
-		fmt.Println("4. Hapus Mahasiswa")
-		fmt.Println("0. Keluar")
+	jumlahMahasiswa := 0
+	selesai := false
 
+	for !selesai {
+		tampilkanMenuUtama()
 		pilihan := bacaAngka("Pilih menu: ")
 
 		switch pilihan {
 		case 1:
-			tambahMahasiswa()
+			tambahMahasiswa(&dataMahasiswa, &jumlahMahasiswa)
 		case 2:
-			tampilkanMahasiswa()
+			tampilkanMahasiswa(dataMahasiswa, jumlahMahasiswa)
 		case 3:
-			ubahMahasiswa()
+			ubahMahasiswa(&dataMahasiswa, jumlahMahasiswa)
 		case 4:
-			hapusMahasiswa()
+			hapusMahasiswa(&dataMahasiswa, &jumlahMahasiswa)
 		case 0:
 			fmt.Println("Program selesai.")
-			return
+			selesai = true
 		default:
 			fmt.Println("Menu tidak tersedia.")
 		}
 	}
 }
 
-func tambahMahasiswa() {
+func tampilkanMenuUtama() {
+	fmt.Println()
+	fmt.Println("=== SiPresensi ===")
+	fmt.Println("1. Tambah Mahasiswa")
+	fmt.Println("2. Tampilkan Mahasiswa")
+	fmt.Println("3. Ubah Mahasiswa")
+	fmt.Println("4. Hapus Mahasiswa")
+	fmt.Println("0. Keluar")
+}
+
+func tambahMahasiswa(daftar *[100]Mahasiswa, jumlah *int) {
 	var mahasiswaBaru Mahasiswa
 
-	mahasiswaBaru.Nim = bacaTeks("NIM: ")
+	if *jumlah >= 100 {
+		fmt.Println("Data mahasiswa sudah penuh.")
+	} else {
+		mahasiswaBaru.Nim = bacaTeks("NIM: ")
 
-	if cariIndexMahasiswa(mahasiswaBaru.Nim) != -1 {
-		fmt.Println("NIM sudah terdaftar.")
-		return
+		if cariMahasiswaSequential(*daftar, *jumlah, mahasiswaBaru.Nim) != -1 {
+			fmt.Println("NIM sudah terdaftar.")
+		} else {
+			mahasiswaBaru.Nama = bacaTeks("Nama tanpa spasi: ")
+			mahasiswaBaru.Kelas = bacaTeks("Kelas: ")
+
+			daftar[*jumlah] = mahasiswaBaru
+			*jumlah = *jumlah + 1
+
+			urutkanNimInsertion(daftar, *jumlah)
+			fmt.Println("Data mahasiswa berhasil ditambahkan.")
+		}
 	}
-
-	mahasiswaBaru.Nama = bacaTeks("Nama tanpa spasi: ")
-	mahasiswaBaru.Kelas = bacaTeks("Kelas: ")
-
-	daftarMahasiswa = append(daftarMahasiswa, mahasiswaBaru)
-	fmt.Println("Data mahasiswa berhasil ditambahkan.")
 }
 
-func tampilkanMahasiswa() {
-	if len(daftarMahasiswa) == 0 {
+func tampilkanMahasiswa(daftar [100]Mahasiswa, jumlah int) {
+	if jumlah == 0 {
 		fmt.Println("Belum ada data mahasiswa.")
-		return
-	}
+	} else {
+		fmt.Println()
+		fmt.Printf("%-14s %-25s %-14s\n", "NIM", "Nama", "Kelas")
 
-	fmt.Println()
-	fmt.Printf("%-14s %-25s %-14s\n", "NIM", "Nama", "Kelas")
-
-	for _, mahasiswa := range daftarMahasiswa {
-		fmt.Printf("%-14s %-25.25s %-14s\n",
-			mahasiswa.Nim,
-			mahasiswa.Nama,
-			mahasiswa.Kelas,
-		)
+		for i := 0; i < jumlah; i++ {
+			fmt.Printf("%-14s %-25.25s %-14s\n",
+				daftar[i].Nim,
+				daftar[i].Nama,
+				daftar[i].Kelas,
+			)
+		}
 	}
 }
 
-func ubahMahasiswa() {
+func ubahMahasiswa(daftar *[100]Mahasiswa, jumlah int) {
 	nimDicari := bacaTeks("Masukkan NIM yang ingin diubah: ")
-	posisi := cariIndexMahasiswa(nimDicari)
+	posisi := cariMahasiswaBinary(*daftar, jumlah, nimDicari)
 
 	if posisi == -1 {
 		fmt.Println("Mahasiswa tidak ditemukan.")
-		return
+	} else {
+		daftar[posisi].Nama = bacaTeks("Nama baru tanpa spasi: ")
+		daftar[posisi].Kelas = bacaTeks("Kelas baru: ")
+
+		fmt.Println("Data mahasiswa berhasil diubah.")
 	}
-
-	daftarMahasiswa[posisi].Nama = bacaTeks("Nama baru tanpa spasi: ")
-	daftarMahasiswa[posisi].Kelas = bacaTeks("Kelas baru: ")
-
-	fmt.Println("Data mahasiswa berhasil diubah.")
 }
 
-func hapusMahasiswa() {
+func hapusMahasiswa(daftar *[100]Mahasiswa, jumlah *int) {
 	nimDicari := bacaTeks("Masukkan NIM yang ingin dihapus: ")
-	posisi := cariIndexMahasiswa(nimDicari)
+	posisi := cariMahasiswaBinary(*daftar, *jumlah, nimDicari)
 
 	if posisi == -1 {
 		fmt.Println("Mahasiswa tidak ditemukan.")
-		return
-	}
+	} else {
+		for i := posisi; i < *jumlah-1; i++ {
+			daftar[i] = daftar[i+1]
+		}
 
-	daftarMahasiswa = append(daftarMahasiswa[:posisi], daftarMahasiswa[posisi+1:]...)
-	fmt.Println("Data mahasiswa berhasil dihapus.")
+		daftar[*jumlah-1] = Mahasiswa{}
+		*jumlah = *jumlah - 1
+
+		fmt.Println("Data mahasiswa berhasil dihapus.")
+	}
 }
 
-func cariIndexMahasiswa(nim string) int {
-	for i, mahasiswa := range daftarMahasiswa {
-		if mahasiswa.Nim == nim {
-			return i
+func cariMahasiswaSequential(daftar [100]Mahasiswa, jumlah int, nim string) int {
+	posisi := -1
+	i := 0
+
+	for i < jumlah && posisi == -1 {
+		if daftar[i].Nim == nim {
+			posisi = i
+		}
+
+		i = i + 1
+	}
+
+	return posisi
+}
+
+func cariMahasiswaBinary(daftar [100]Mahasiswa, jumlah int, nim string) int {
+	kiri := 0
+	kanan := jumlah - 1
+	posisi := -1
+
+	for kiri <= kanan && posisi == -1 {
+		tengah := (kiri + kanan) / 2
+
+		if daftar[tengah].Nim == nim {
+			posisi = tengah
+		} else if daftar[tengah].Nim < nim {
+			kiri = tengah + 1
+		} else {
+			kanan = tengah - 1
 		}
 	}
 
-	return -1
+	return posisi
+}
+
+func urutkanNimInsertion(daftar *[100]Mahasiswa, jumlah int) {
+	for i := 1; i < jumlah; i++ {
+		mahasiswaDipilih := daftar[i]
+		j := i - 1
+
+		for j >= 0 && daftar[j].Nim > mahasiswaDipilih.Nim {
+			daftar[j+1] = daftar[j]
+			j = j - 1
+		}
+
+		daftar[j+1] = mahasiswaDipilih
+	}
 }
 
 func bacaAngka(pesan string) int {
-	for {
+	angka := 0
+	valid := false
+
+	for !valid {
 		teks := bacaTeks(pesan)
-		angka, valid := ubahKeAngka(teks)
+		hasil, berhasil := ubahKeAngka(teks)
 
-		if valid {
-			return angka
+		if berhasil {
+			angka = hasil
+			valid = true
+		} else {
+			fmt.Println("Input harus berupa angka.")
 		}
-
-		fmt.Println("Input harus berupa angka.")
 	}
+
+	return angka
 }
 
 func bacaTeks(pesan string) string {
 	var teks string
+	valid := false
 
-	for {
+	for !valid {
 		fmt.Print(pesan)
 		_, err := fmt.Scanln(&teks)
 
 		if err == nil && teks != "" {
-			return teks
+			valid = true
+		} else {
+			fmt.Println("Input tidak boleh kosong atau mengandung spasi.")
 		}
-
-		fmt.Println("Input tidak boleh kosong atau mengandung spasi.")
 	}
+
+	return teks
 }
 
 func ubahKeAngka(teks string) (int, bool) {
+	angka := 0
+	valid := true
+	i := 0
+
 	if teks == "" {
-		return 0, false
+		valid = false
 	}
 
-	angka := 0
-
-	for i := 0; i < len(teks); i++ {
+	for i < len(teks) && valid {
 		if teks[i] < '0' || teks[i] > '9' {
-			return 0, false
+			valid = false
+		} else {
+			angka = angka*10 + int(teks[i]-'0')
 		}
 
-		angka = angka*10 + int(teks[i]-'0')
+		i = i + 1
 	}
 
-	return angka, true
+	return angka, valid
 }
