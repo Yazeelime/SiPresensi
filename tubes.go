@@ -8,10 +8,19 @@ type Mahasiswa struct {
 	Kelas string
 }
 
+type Presensi struct {
+	Nim        string
+	MataKuliah string
+	Status     string
+}
+
+var dataPresensi [1000]Presensi
+
 var dataMahasiswa [100]Mahasiswa
 
 func main() {
 	jumlahMahasiswa := 0
+	jumlahPresensi := 0
 	selesai := false
 
 	for !selesai {
@@ -20,15 +29,16 @@ func main() {
 
 		switch pilihan {
 		case 1:
-			tambahMahasiswa(&dataMahasiswa, &jumlahMahasiswa)
+			menuDataMahasiswa(&dataMahasiswa, &jumlahMahasiswa)
 		case 2:
-			tampilkanMahasiswa(dataMahasiswa, jumlahMahasiswa)
-		case 3:
-			ubahMahasiswa(&dataMahasiswa, jumlahMahasiswa)
-		case 4:
-			hapusMahasiswa(&dataMahasiswa, &jumlahMahasiswa)
+			menuDataPresensi(
+				&dataPresensi,
+				&jumlahPresensi,
+				dataMahasiswa,
+				jumlahMahasiswa,
+			)
 		case 0:
-			fmt.Println("Program selesai.")
+			fmt.Println("Terima kasih telah mengakses SiPresensi.")
 			selesai = true
 		default:
 			fmt.Println("Menu tidak tersedia.")
@@ -39,11 +49,39 @@ func main() {
 func tampilkanMenuUtama() {
 	fmt.Println()
 	fmt.Println("=== SiPresensi ===")
-	fmt.Println("1. Tambah Mahasiswa")
-	fmt.Println("2. Tampilkan Mahasiswa")
-	fmt.Println("3. Ubah Mahasiswa")
-	fmt.Println("4. Hapus Mahasiswa")
+	fmt.Println("1. Data Mahasiswa")
+	fmt.Println("2. Data Presensi")
 	fmt.Println("0. Keluar")
+}
+func menuDataMahasiswa(daftar *[100]Mahasiswa, jumlah *int) {
+	kembali := false
+
+	for !kembali {
+		fmt.Println()
+		fmt.Println("=== Data Mahasiswa ===")
+		fmt.Println("1. Tambah Mahasiswa")
+		fmt.Println("2. Tampilkan Mahasiswa")
+		fmt.Println("3. Ubah Mahasiswa")
+		fmt.Println("4. Hapus Mahasiswa")
+		fmt.Println("0. Kembali")
+
+		pilihan := bacaAngka("Pilih menu: ")
+
+		switch pilihan {
+		case 1:
+			tambahMahasiswa(daftar, jumlah)
+		case 2:
+			tampilkanMahasiswa(*daftar, *jumlah)
+		case 3:
+			ubahMahasiswa(daftar, *jumlah)
+		case 4:
+			hapusMahasiswa(daftar, jumlah)
+		case 0:
+			kembali = true
+		default:
+			fmt.Println("Menu tidak tersedia.")
+		}
+	}
 }
 
 func tambahMahasiswa(daftar *[100]Mahasiswa, jumlah *int) {
@@ -224,4 +262,191 @@ func ubahKeAngka(teks string) (int, bool) {
 	}
 
 	return angka, valid
+}
+
+func menuDataPresensi(
+	daftarPresensi *[1000]Presensi,
+	jumlahPresensi *int,
+	daftarMahasiswa [100]Mahasiswa,
+	jumlahMahasiswa int,
+) {
+	kembali := false
+
+	for !kembali {
+		fmt.Println()
+		fmt.Println("=== Data Presensi ===")
+		fmt.Println("1. Tambah Presensi")
+		fmt.Println("2. Tampilkan Presensi")
+		fmt.Println("3. Ubah Presensi")
+		fmt.Println("4. Hapus Presensi")
+		fmt.Println("0. Kembali")
+
+		pilihan := bacaAngka("Pilih menu: ")
+
+		switch pilihan {
+		case 1:
+			tambahPresensi(
+				daftarPresensi,
+				jumlahPresensi,
+				daftarMahasiswa,
+				jumlahMahasiswa,
+			)
+		case 2:
+			tampilkanPresensi(*daftarPresensi, *jumlahPresensi)
+		case 3:
+			ubahPresensi(daftarPresensi, *jumlahPresensi)
+		case 4:
+			hapusPresensi(daftarPresensi, jumlahPresensi)
+		case 0:
+			kembali = true
+		default:
+			fmt.Println("Menu tidak tersedia.")
+		}
+	}
+}
+
+func tambahPresensi(
+	daftarPresensi *[1000]Presensi,
+	jumlahPresensi *int,
+	daftarMahasiswa [100]Mahasiswa,
+	jumlahMahasiswa int,
+) {
+	var presensiBaru Presensi
+
+	if *jumlahPresensi >= 1000 {
+		fmt.Println("Data presensi sudah penuh.")
+		return
+	}
+
+	presensiBaru.Nim = bacaTeks("NIM: ")
+
+	if cariMahasiswaSequential(
+		daftarMahasiswa,
+		jumlahMahasiswa,
+		presensiBaru.Nim,
+	) == -1 {
+
+		fmt.Println("Mahasiswa tidak ditemukan.")
+		return
+	}
+
+	presensiBaru.MataKuliah = bacaTeks("Mata Kuliah: ")
+	presensiBaru.Status = bacaStatus()
+
+	daftarPresensi[*jumlahPresensi] = presensiBaru
+	*jumlahPresensi++
+
+	fmt.Println("Presensi berhasil ditambahkan.")
+}
+
+func tampilkanPresensi(
+	daftar [1000]Presensi,
+	jumlah int,
+) {
+	if jumlah == 0 {
+		fmt.Println("Belum ada data presensi.")
+		return
+	}
+
+	fmt.Println()
+	fmt.Printf("%-15s %-25s %-10s\n",
+		"NIM",
+		"Mata Kuliah",
+		"Status")
+
+	for i := 0; i < jumlah; i++ {
+		fmt.Printf("%-15s %-25s %-10s\n",
+			daftar[i].Nim,
+			daftar[i].MataKuliah,
+			daftar[i].Status)
+	}
+}
+
+func ubahPresensi(
+	daftar *[1000]Presensi,
+	jumlah int,
+) {
+	nim := bacaTeks("NIM: ")
+	mataKuliah := bacaTeks("Mata Kuliah: ")
+
+	posisi := cariPresensi(
+		*daftar,
+		jumlah,
+		nim,
+		mataKuliah,
+	)
+
+	if posisi == -1 {
+		fmt.Println("Data presensi tidak ditemukan.")
+		return
+	}
+
+	daftar[posisi].Status = bacaStatus()
+
+	fmt.Println("Data presensi berhasil diubah.")
+}
+
+func hapusPresensi(
+	daftar *[1000]Presensi,
+	jumlah *int,
+) {
+	nim := bacaTeks("NIM: ")
+	mataKuliah := bacaTeks("Mata Kuliah: ")
+
+	posisi := cariPresensi(
+		*daftar,
+		*jumlah,
+		nim,
+		mataKuliah,
+	)
+
+	if posisi == -1 {
+		fmt.Println("Data presensi tidak ditemukan.")
+		return
+	}
+
+	for i := posisi; i < *jumlah-1; i++ {
+		daftar[i] = daftar[i+1]
+	}
+
+	daftar[*jumlah-1] = Presensi{}
+	*jumlah--
+
+	fmt.Println("Data presensi berhasil dihapus.")
+}
+
+func cariPresensi(
+	daftar [1000]Presensi,
+	jumlah int,
+	nim string,
+	mataKuliah string,
+) int {
+
+	for i := 0; i < jumlah; i++ {
+		if daftar[i].Nim == nim &&
+			daftar[i].MataKuliah == mataKuliah {
+
+			return i
+		}
+	}
+
+	return -1
+}
+
+func bacaStatus() string {
+	for {
+		status := bacaTeks(
+			"Status (hadir/izin/sakit/alpa): ",
+		)
+
+		if status == "hadir" ||
+			status == "izin" ||
+			status == "sakit" ||
+			status == "alpa" {
+
+			return status
+		}
+
+		fmt.Println("Status tidak valid.")
+	}
 }
