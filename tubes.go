@@ -37,6 +37,11 @@ func main() {
 				dataMahasiswa,
 				jumlahMahasiswa,
 			)
+		case 3:
+			menuCariMahasiswa(
+			&dataMahasiswa,
+			jumlahMahasiswa,
+			)
 		case 0:
 			fmt.Println("Terima kasih telah mengakses SiPresensi.")
 			selesai = true
@@ -51,6 +56,8 @@ func tampilkanMenuUtama() {
 	fmt.Println("=== SiPresensi ===")
 	fmt.Println("1. Data Mahasiswa")
 	fmt.Println("2. Data Presensi")
+	fmt.Println("3. Cari Mahasiswa")
+	fmt.Println("4. Statistik")
 	fmt.Println("0. Keluar")
 }
 func menuDataMahasiswa(daftar *[100]Mahasiswa, jumlah *int) {
@@ -448,5 +455,126 @@ func bacaStatus() string {
 		}
 
 		fmt.Println("Status tidak valid.")
+	}
+}
+
+func menuCariMahasiswa(
+	daftar *[100]Mahasiswa,
+	jumlah int,
+) {
+	kembali := false
+
+	for !kembali {
+		fmt.Println()
+		fmt.Println("=== Cari Mahasiswa ===")
+		fmt.Println("1. Cari NIM")
+		fmt.Println("2. Urutkan Berdasarkan Nama")
+		fmt.Println("0. Kembali")
+
+		pilihan := bacaAngka("Pilih menu: ")
+
+		switch pilihan {
+		case 1:
+			cariMahasiswaMenu(*daftar, jumlah)
+
+		case 2:
+			menuUrutNama(daftar, jumlah)
+
+		case 0:
+			kembali = true
+
+		default:
+			fmt.Println("Menu tidak tersedia.")
+		}
+	}
+}
+
+func cariMahasiswaMenu(
+	daftar [100]Mahasiswa,
+	jumlah int,
+) {
+	nim := bacaTeks("Masukkan NIM: ")
+
+	posisi := cariMahasiswaBinary(
+		daftar,
+		jumlah,
+		nim,
+	)
+
+	if posisi == -1 {
+		fmt.Println("Mahasiswa tidak ditemukan.")
+	} else {
+		fmt.Println()
+		fmt.Printf("%-14s %-25s %-14s\n",
+			"NIM",
+			"Nama",
+			"Kelas")
+
+		fmt.Printf("%-14s %-25s %-14s\n",
+			daftar[posisi].Nim,
+			daftar[posisi].Nama,
+			daftar[posisi].Kelas)
+	}
+}
+
+func menuUrutNama(
+	daftar *[100]Mahasiswa,
+	jumlah int,
+) {
+	fmt.Println()
+	fmt.Println("1. Ascending")
+	fmt.Println("2. Descending")
+
+	pilihan := bacaAngka("Pilih urutan: ")
+
+	switch pilihan {
+	case 1:
+		urutNamaAscending(daftar, jumlah)
+		tampilkanMahasiswa(*daftar, jumlah)
+
+	case 2:
+		urutNamaDescending(daftar, jumlah)
+		tampilkanMahasiswa(*daftar, jumlah)
+
+	default:
+		fmt.Println("Pilihan tidak tersedia.")
+	}
+}
+
+func urutNamaAscending(
+	daftar *[100]Mahasiswa,
+	jumlah int,
+) {
+	for i := 1; i < jumlah; i++ {
+		dataDipilih := daftar[i]
+		j := i - 1
+
+		for j >= 0 &&
+			daftar[j].Nama > dataDipilih.Nama {
+
+			daftar[j+1] = daftar[j]
+			j--
+		}
+
+		daftar[j+1] = dataDipilih
+	}
+}
+
+func urutNamaDescending(
+	daftar *[100]Mahasiswa,
+	jumlah int,
+) {
+	for i := 1; i < jumlah; i++ {
+		dataDipilih := daftar[i]
+		j := i - 1
+
+		for j >= 0 &&
+			daftar[j].Nama < dataDipilih.Nama {
+
+			daftar[j+1] = daftar[j]
+			j--
+		}
+
+		daftar[j+1] = dataDipilih
 	}
 }
