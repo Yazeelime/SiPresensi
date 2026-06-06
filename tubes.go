@@ -39,9 +39,16 @@ func main() {
 			)
 		case 3:
 			menuCariMahasiswa(
-			&dataMahasiswa,
-			jumlahMahasiswa,
+				&dataMahasiswa,
+				jumlahMahasiswa,
 			)
+		case 4:
+			menuStatistik(
+				dataMahasiswa,
+				jumlahMahasiswa,
+				dataPresensi,
+				jumlahPresensi,
+	)
 		case 0:
 			fmt.Println("Terima kasih telah mengakses SiPresensi.")
 			selesai = true
@@ -576,5 +583,123 @@ func urutNamaDescending(
 		}
 
 		daftar[j+1] = dataDipilih
+	}
+}
+
+func menuStatistik(
+	daftarMahasiswa [100]Mahasiswa,
+	jumlahMahasiswa int,
+	daftarPresensi [1000]Presensi,
+	jumlahPresensi int,
+) {
+	kembali := false
+
+	for !kembali {
+		fmt.Println()
+		fmt.Println("=== Statistik ===")
+		fmt.Println("1. Persentase Kehadiran Per Kelas")
+		fmt.Println("2. Mahasiswa Dengan Alpa Terbanyak")
+		fmt.Println("0. Kembali")
+
+		pilihan := bacaAngka("Pilih menu: ")
+
+		switch pilihan {
+		case 1:
+			statistikKehadiranKelas(
+				daftarMahasiswa,
+				jumlahMahasiswa,
+				daftarPresensi,
+				jumlahPresensi,
+			)
+
+		case 2:
+			alpaTerbanyak(
+				daftarMahasiswa,
+				jumlahMahasiswa,
+				daftarPresensi,
+				jumlahPresensi,
+			)
+
+		case 0:
+			kembali = true
+		}
+	}
+}
+
+func statistikKehadiranKelas(
+	daftarMahasiswa [100]Mahasiswa,
+	jumlahMahasiswa int,
+	daftarPresensi [1000]Presensi,
+	jumlahPresensi int,
+) {
+	kelas := bacaTeks("Masukkan kelas: ")
+
+	totalPresensi := 0
+	totalHadir := 0
+
+	for i := 0; i < jumlahMahasiswa; i++ {
+
+		if daftarMahasiswa[i].Kelas == kelas {
+
+			for j := 0; j < jumlahPresensi; j++ {
+
+				if daftarPresensi[j].Nim ==
+					daftarMahasiswa[i].Nim {
+
+					totalPresensi++
+
+					if daftarPresensi[j].Status == "hadir" {
+						totalHadir++
+					}
+				}
+			}
+		}
+	}
+
+	if totalPresensi == 0 {
+		fmt.Println("Belum ada data presensi.")
+		return
+	}
+
+	persentase :=
+		float64(totalHadir) /
+			float64(totalPresensi) * 100
+
+	fmt.Printf(
+		"Persentase Kehadiran %.2f%%\n",
+		persentase,
+	)
+}
+
+func alpaTerbanyak(
+	daftarMahasiswa [100]Mahasiswa,
+	jumlahMahasiswa int,
+	daftarPresensi [1000]Presensi,
+	jumlahPresensi int,
+) {
+	fmt.Println()
+	fmt.Println("Mahasiswa Dengan Alpa Terbanyak")
+	fmt.Println()
+
+	for i := 0; i < jumlahMahasiswa; i++ {
+
+		jumlahAlpa := 0
+
+		for j := 0; j < jumlahPresensi; j++ {
+
+			if daftarPresensi[j].Nim ==
+				daftarMahasiswa[i].Nim &&
+				daftarPresensi[j].Status == "alpa" {
+
+				jumlahAlpa++
+			}
+		}
+
+		fmt.Printf(
+			"%-14s %-20s Alpa: %d\n",
+			daftarMahasiswa[i].Nim,
+			daftarMahasiswa[i].Nama,
+			jumlahAlpa,
+		)
 	}
 }
