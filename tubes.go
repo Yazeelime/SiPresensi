@@ -1,6 +1,11 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
+)
 
 type Mahasiswa struct {
 	Nim   string
@@ -22,6 +27,21 @@ func main() {
 	jumlahMahasiswa := 0
 	jumlahPresensi := 0
 	selesai := false
+
+	bacaDataMahasiswa(&dataMahasiswa, &jumlahMahasiswa)
+	bacaDataPresensi(&dataPresensi, &jumlahPresensi)
+
+	sinyalKeluar := make(chan os.Signal, 1)
+	signal.Notify(sinyalKeluar, os.Interrupt, syscall.SIGTERM)
+
+	go func() {
+		<-sinyalKeluar
+		simpanDataMahasiswa(dataMahasiswa, jumlahMahasiswa)
+		simpanDataPresensi(dataPresensi, jumlahPresensi)
+		fmt.Println()
+		fmt.Println("Data berhasil disimpan sebelum program ditutup")
+		os.Exit(0)
+	}()
 
 	for !selesai {
 		tampilkanMenuUtama()
@@ -50,6 +70,8 @@ func main() {
 				jumlahPresensi,
 	)
 		case 0:
+			simpanDataMahasiswa(dataMahasiswa, jumlahMahasiswa)
+			simpanDataPresensi(dataPresensi, jumlahPresensi)
 			fmt.Println("Terima kasih telah mengakses SiPresensi.")
 			selesai = true
 		default:
@@ -701,5 +723,61 @@ func alpaTerbanyak(
 			daftarMahasiswa[i].Nama,
 			jumlahAlpa,
 		)
+	}
+}
+
+func simpanDataMahasiswa(daftar [100]Mahasiswa, jumlah int) {
+	file, err := os.Create("data_mahasiswa.txt")
+
+	if err == nil {
+		fmt.Fprintln(file, jumlah)
+
+		for i := 0; i < jumlah; i++ {
+			fmt.Fprintln(file, daftar[i].Nim, daftar[i].Nama, daftar[i].Kelas)
+		}
+
+		file.Close()
+	}
+}
+
+func bacaDataMahasiswa(daftar *[100]Mahasiswa, jumlah *int) {
+	file, err := os.Open("data_mahasiswa.txt")
+
+	if err == nil {
+		fmt.Fscan(file, jumlah)
+
+		for i := 0; i < *jumlah; i++ {
+			fmt.Fscan(file, &daftar[i].Nim, &daftar[i].Nama, &daftar[i].Kelas)
+		}
+
+		file.Close()
+	}
+}
+
+func simpanDataPresensi(daftar [1000]Presensi, jumlah int) {
+	file, err := os.Create("data_presensi.txt")
+
+	if err == nil {
+		fmt.Fprintln(file, jumlah)
+
+		for i := 0; i < jumlah; i++ {
+			fmt.Fprintln(file, daftar[i].Nim, daftar[i].MataKuliah, daftar[i].Status)
+		}
+
+		file.Close()
+	}
+}
+
+func bacaDataPresensi(daftar *[1000]Presensi, jumlah *int) {
+	file, err := os.Open("data_presensi.txt")
+
+	if err == nil {
+		fmt.Fscan(file, jumlah)
+
+		for i := 0; i < *jumlah; i++ {
+			fmt.Fscan(file, &daftar[i].Nim, &daftar[i].MataKuliah, &daftar[i].Status)
+		}
+
+		file.Close()
 	}
 }
